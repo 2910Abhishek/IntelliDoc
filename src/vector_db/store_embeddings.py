@@ -1,54 +1,38 @@
-import chromadb
-from chromadb.config import Settings
+from langchain.vectorstores import Chroma
+from langchain_huggingface import HuggingFaceEmbeddings
+from src.utils.preprocess import preprocess_text
 import os
-from src.utils.preprocess import preprocess_text  # Import preprocessing function
-import sys
-from pathlib import Path
-sys.path.append(str(Path(__file__).resolve().parents[2]))  # Adds IntelliDoc/ to sys.path
-
-
+import shutil
 
 def store_in_chroma(input_file, output_dir, collection_name="pdf_chunks"):
     """
-    Store preprocessed text chunks and embeddings in Chroma.
+    Store preprocessed text chunks and embeddings in Chroma using LangChain.
     Args:
-        input_file (str): Path to extracted text file.
+        input_file (str): Path to extracted text file (passed dynamically).
         output_dir (str): Directory for Chroma persistence.
         collection_name (str): Name of the Chroma collection.
     Returns:
-        chromadb.Collection: The populated collection.
+        Chroma: The populated vector store.
     """
-    # Preprocess text to get chunks with embeddings
+    # Clear existing Chroma database for fresh context
+    chroma_db_path = os.path.join(output_dir, "chroma_db")
+    if os.path.exists(chroma_db_path):
+        shutil.rmtree(chroma_db_path)
+    
+    # Preprocess text to get chunks
     chunks = preprocess_text(input_file, os.path.join(output_dir, "chunks"))
+    texts = [chunk['text'] for chunk in chunks]
     
-    # Initialize Chroma client with persistence
-    client = chromadb.PersistentClient(
-        path=os.path.join(output_dir, "chroma_db"),
-        settings=Settings(anonymized_telemetry=False)
+    # Initialize embeddings
+    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    
+    # Create and populate Chroma vector store
+    vector_store = Chroma.from_texts(
+        texts=texts,
+        embedding=embeddings,
+        persist_directory=chroma_db_path,
+        collection_name=collection_name
     )
     
-    # Create or get collection
-    collection = client.get_or_create_collection(name=collection_name)
-    
-    # Prepare data for Chroma
-    ids = [chunk['chunk_id'] for chunk in chunks]
-    embeddings = [chunk['embedding'] for chunk in chunks]
-    documents = [chunk['text'] for chunk in chunks]
-    metadatas = [{'source': input_file, 'chunk_id': chunk['chunk_id']} for chunk in chunks]
-    
-    # Add to Chroma
-    collection.add(
-        ids=ids,
-        embeddings=embeddings,
-        documents=documents,
-        metadatas=metadatas
-    )
-    
-    print(f"Stored {len(chunks)} chunks in Chroma collection '{collection_name}'")
-    return collection
-
-if __name__ == "__main__":
-    # Example usage
-    input_file = "data/processed/Abhishek_extracted.txt"  # From OCR step
-    output_dir = "data/processed/"
-    collection = store_in_chroma(input_file, output_dir)
+    print(f"Stored {len(texts)} chunks in Chroma collection '{collection_name}'")
+    return vector_store
