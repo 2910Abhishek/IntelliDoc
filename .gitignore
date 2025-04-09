@@ -2,3 +2,49 @@ venv/
 Abhishek.pdf
 data/raw
 data/processed
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.Python
+pip-selfcheck.json
+
+# Exclude all __init__.py files
+**/__init__.py
+
+# Data directories (raw and processed data)
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Model files (large pretrained models)
+models/*
+!models/.gitkeep
+
+# Chroma database files
+data/processed/chroma_db/
+
+# Temporary files
+*.tmp
+*.log
+*.cache
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Deployment-specific files (we’ll add later if needed)
+*.dockerignore
+Dockerfile
