@@ -100,9 +100,7 @@ def main():
 
     if selected_doc and st.session_state.pipeline:
         doc = next(doc for doc in st.session_state.documents if doc['metadata']['filename'] == selected_doc)
-        for chunk in doc['chunks']:
-            with st.expander(f"Page {chunk['page']} - Chunk {chunk['chunk_id']}"):
-                st.text(chunk['text'])
+        st.json(doc['metadata'])
 
 if __name__ == "__main__":
     main()
