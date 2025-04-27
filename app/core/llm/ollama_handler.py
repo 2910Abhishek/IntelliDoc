@@ -6,24 +6,24 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class OllamaHandler:
-    def __init__(self, model_name: str = "mistral"):
+    def __init__(self, model_name: str = "mistral-nemo"):  # Updated default model name
         self.model_name = model_name
         self._verify_model()
 
     def _verify_model(self) -> None:
-        """Verify if the model is available locally, if not pull it."""
+        """Verify if the model is available locally."""
         try:
             logger.info(f"Checking for model {self.model_name}...")
-            # List models to check if our model exists
             models = ollama.list()
-            model_exists = any(model['name'] == self.model_name for model in models['models'])
+            model_exists = any(model.get('name') == self.model_name for model in models.get('models', []))
             
             if not model_exists:
-                logger.info(f"Pulling model {self.model_name}...")
-                ollama.pull(self.model_name)
-                logger.info(f"Successfully pulled model {self.model_name}")
+                logger.info(f"Model {self.model_name} not found. Available models: {[m['name'] for m in models.get('models', [])]}")
+                raise ValueError(f"Model {self.model_name} not available. Please check available models using 'ollama list'")
+            else:
+                logger.info(f"Successfully found model {self.model_name}")
         except Exception as e:
-            logger.error(f"Error verifying/pulling model: {e}")
+            logger.error(f"Error verifying model: {e}")
             raise
 
     def generate_response(self, 

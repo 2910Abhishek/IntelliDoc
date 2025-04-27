@@ -2,7 +2,7 @@
 import logging
 from pathlib import Path
 from app.core.processing.pdf_processor import PDFProcessor
-from app.core.rag.rag_pipeline import RAGPipeline
+from app.core.rag.pipeline import RAGPipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

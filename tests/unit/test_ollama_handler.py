@@ -5,13 +5,31 @@ from app.core.llm.ollama_handler import OllamaHandler
 @pytest.fixture
 def mock_ollama():
     with patch('app.core.llm.ollama_handler.ollama') as mock:
-        # Mock the list method
+        # Mock the list method with correct response structure
         mock.list.return_value = {
-            'models': [{'name': 'mistral'}]
+            'models': [
+                {
+                    'name': 'mistral-nemo',  # Updated model name
+                    'modified_at': '2024-03-30T15:55:39.288102+05:30',
+                    'size': 4563402752
+                }
+            ]
         }
         # Mock the generate method
         mock.generate.return_value = {
-            'response': 'This is a test response'
+            'response': 'Test response'
+        }
+        yield mock
+
+@pytest.fixture
+def mock_llm(mock_ollama):
+    with patch('app.core.llm.ollama_handler.OllamaHandler') as mock:
+        instance = mock.return_value
+        instance.model_name = "mistral-nemo"  # Updated model name
+        instance.generate_response.return_value = {
+            'status': 'success',
+            'response': 'Test response',
+            'model': 'mistral-nemo'  # Updated model name
         }
         yield mock
 

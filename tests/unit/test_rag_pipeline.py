@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import Mock, patch
-from app.core.rag.rag_pipeline import RAGPipeline
+from app.core.rag.pipeline import RAGPipeline
 
 @pytest.fixture
 def mock_vector_store():
@@ -13,9 +13,30 @@ def mock_vector_store():
         yield mock
 
 @pytest.fixture
-def mock_llm():
+def mock_ollama():
+    with patch('app.core.llm.ollama_handler.ollama') as mock:
+        # Mock the list method with correct response structure
+        mock.list.return_value = {
+            'models': [
+                {
+                    'model': 'mistral',
+                    'modified_at': '2024-03-30T15:55:39.288102+05:30',
+                    'size': 4563402752
+                }
+            ]
+        }
+        # Mock the generate method
+        mock.generate.return_value = {
+            'response': 'Test response'
+        }
+        yield mock
+
+@pytest.fixture
+def mock_llm(mock_ollama):
     with patch('app.core.llm.ollama_handler.OllamaHandler') as mock:
-        mock.return_value.generate_response.return_value = {
+        instance = mock.return_value
+        instance.model_name = "mistral"
+        instance.generate_response.return_value = {
             'status': 'success',
             'response': 'Test response',
             'model': 'mistral'
